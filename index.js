@@ -4,11 +4,12 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import { DATABASE } from "./config.js";
+
 require("dotenv").config();
 
 import authRoutes from "./routes/auth";
 
-// const nodemailer = require("nodemailer");
+const nodemailer = require("nodemailer");
 // const { google } = require("googleapis");
 
 // const CLIENT_ID =
@@ -16,7 +17,7 @@ import authRoutes from "./routes/auth";
 // const CLIENT_SECRET = "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";
 // const REDIRECT_URI = "https://developers.google.com/oauthplayground";
 // const REFRESH_TOKEN =
-//   "1//04qHrirOjCviNCgYIARAAGAQSNwF-L9Ir-d_hLUPtz0reSsuCPQA95yfWFxvkJEs8YfZzbPbxCX9c1_2f0cMr49gaNAGf4HUczYQ";
+//   "1//044bHyLW8ucZCCgYIARAAGAQSNwF-L9IrsZy5tBZQ3Sr1z7ZxWCcnCelbaFjRon4ugDdDXViY8SmSWkE94hi661ECzUB9_wdZR1g";
 
 // const oAuth2Client = new google.auth.OAuth2(
 //   CLIENT_ID,

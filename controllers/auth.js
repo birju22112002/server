@@ -1,14 +1,9 @@
 /** @format */
-
 import User from "../models/user";
 import { hashPassword, comparePassword } from "../helpers/auth";
 import jwt from "jsonwebtoken";
 import nanoid from "nanoid";
-
-// sendgrid
-require("dotenv").config();
-const sgMail = require("@sendgrid/mail");
-sgMail.setApiKey(process.env.SENDGRID_KEY);
+import { sendResetCodeEmail } from "../helpers/email"; // Import the new function for sending emails
 
 export const signup = async (req, res) => {
   console.log("HIT SIGNUP");
@@ -37,9 +32,6 @@ export const signup = async (req, res) => {
       });
     }
 
-    // Check the value of JWT_SECRET
-    console.log("JWT_SECRET:", process.env.JWT_SECRET);
-
     // hash password
     const hashedPassword = await hashPassword(password);
 
@@ -55,7 +47,7 @@ export const signup = async (req, res) => {
         expiresIn: "7d",
       });
 
-      const { password, ...rest } = user._doc;
+      const { password: _, ...rest } = user.toObject();
       return res.status(201).json({
         token,
         user: rest,
@@ -69,44 +61,8 @@ export const signup = async (req, res) => {
   }
 };
 
-export const signin = async (req, res) => {
-  // console.log(req.body);
-  try {
-    const { email, password } = req.body;
-    // check if our db has user with that email
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.json({
-        error: "No user found",
-      });
-    }
-    // check password
-    const match = await comparePassword(password, user.password);
-    if (!match) {
-      return res.json({
-        error: "Wrong password",
-      });
-    }
-    // create signed token
-    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
-
-    user.password = undefined;
-    user.secret = undefined;
-    res.json({
-      token,
-      user,
-    });
-  } catch (err) {
-    console.log(err);
-    return res.status(400).send("Error. Try again.");
-  }
-};
-
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
-  // find user by email
   const user = await User.findOne({ email });
   console.log("USER ===> ", user);
   if (!user) {
@@ -116,47 +72,71 @@ export const forgotPassword = async (req, res) => {
   const resetCode = nanoid(5).toUpperCase();
   // save to db
   user.resetCode = resetCode;
-  user.save();
-  // prepare email
-  const emailData = {
-    from: process.env.EMAIL_FROM,
-    to: user.email,
-    subject: "Password reset code",
-    html: `<h1>Your password reset code is: ${resetCode}</h1>`,
-  };
-  // send email
+  await user.save();
+
+  // Send the reset code email
+  const emailSent = await sendResetCodeEmail(email, resetCode);
+  if (emailSent) {
+    return res.json({ ok: true });
+  } else {
+    return res.json({ ok: false });
+  }
+};
+
+export const signin = async (req, res) => {
+  const { email, password } = req.body;
   try {
-    const data = await sgMail.send(emailData);
-    console.log(data);
-    res.json({ ok: true });
-  } catch (err) {
-    console.log(err);
-    res.json({ ok: false });
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    // Check if user exists
+    if (!user) {
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
+
+    // Compare passwords
+    const isMatch = await comparePassword(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
+
+    // Create and return JWT token
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    // Exclude password from user data
+    const { password: _, ...userData } = user.toObject();
+
+    res.json({ token, user: userData });
+  } catch (error) {
+    console.error("Error in signin:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
 export const resetPassword = async (req, res) => {
+  const { email, resetCode, password } = req.body;
   try {
-    const { email, password, resetCode } = req.body;
-    // find user based on email and resetCode
+    // Find user by email and reset code
     const user = await User.findOne({ email, resetCode });
-    // if user not found
+
+    // Check if user exists
     if (!user) {
-      return res.json({ error: "Email or reset code is invalid" });
+      return res.status(400).json({ error: "Invalid reset code" });
     }
-    // if password is short
-    if (!password || password.length < 6) {
-      return res.json({
-        error: "Password is required and should be 6 characters long",
-      });
-    }
-    // hash password
+
+    // Hash the new password
     const hashedPassword = await hashPassword(password);
+
+    // Update user's password
     user.password = hashedPassword;
-    user.resetCode = "";
-    user.save();
-    return res.json({ ok: true });
-  } catch (err) {
-    console.log(err);
+    await user.save();
+
+    res.json({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("Error in resetPassword:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };

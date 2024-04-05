@@ -1,25 +1,24 @@
 /** @format */
 
 import express from "express";
-
-const router = express.Router();
-
-// controllers
-const {
+import {
   signup,
   signin,
   forgotPassword,
   resetPassword,
-} = require("../controllers/auth");
+} from "../controllers/auth";
+
+const router = express.Router();
 
 router.get("/", (req, res) => {
   return res.json({
     data: "hello world ",
   });
 });
+
 router.post("/signup", signup);
 router.post("/signin", signin);
 router.post("/pages/forgot", forgotPassword);
-router.post("/reset-password", resetPassword);
+router.post("/pages/reset-password", resetPassword);
 
 export default router;
