@@ -1,12 +1,14 @@
 /** @format */
 
 import express from "express";
-import {
+import { requireSignin, isAdmin } from "../middlewares";
+const {
   signup,
   signin,
   forgotPassword,
   resetPassword,
-} from "../controllers/auth";
+  currentUser,
+} = require("../controllers/auth");
 
 const router = express.Router();
 
@@ -20,5 +22,7 @@ router.post("/signup", signup);
 router.post("/signin", signin);
 router.post("/pages/forgot", forgotPassword);
 router.post("/pages/reset-password", resetPassword);
+router.get("/current-admin", requireSignin, isAdmin, currentUser);
 
 export default router;
+// module.exports = router;

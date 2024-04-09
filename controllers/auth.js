@@ -3,8 +3,7 @@ import User from "../models/user";
 import { hashPassword, comparePassword } from "../helpers/auth";
 import jwt from "jsonwebtoken";
 import nanoid from "nanoid";
-import { sendResetCodeEmail } from "../helpers/email"; // Import the new function for sending emails
-
+import { sendResetCodeEmail } from "../helpers/email";
 export const signup = async (req, res) => {
   console.log("HIT SIGNUP");
   try {
@@ -138,5 +137,14 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     console.error("Error in resetPassword:", error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const currentUser = async (req, res) => {
+  try {
+    // const user = await User.findById(req.user._id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.log(err);
   }
 };
