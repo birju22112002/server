@@ -2,13 +2,13 @@
 
 import express from "express";
 import { requireSignin, isAdmin } from "../middlewares";
-const {
+import {
   signup,
   signin,
   forgotPassword,
   resetPassword,
   currentUser,
-} = require("../controllers/auth");
+} from "../controllers/auth";
 
 const router = express.Router();
 

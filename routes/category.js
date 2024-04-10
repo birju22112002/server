@@ -14,10 +14,10 @@ import {
   updateCategory,
 } from "../controllers/category";
 
-router.post("/category", requireSignin, create);
-router.get("/api/categories", requireSignin, categories);
-router.delete("/api/category/:slug", requireSignin, removeCategory);
-router.put("/api/category/:slug", requireSignin, updateCategory);
+router.post("/category", requireSignin, isAdmin, create);
+router.get("/categories", categories);
+router.delete("/category/:slug", requireSignin, isAdmin, removeCategory);
+router.put("/category/:slug", requireSignin, isAdmin, updateCategory);
 router.post("/category", requireSignin, isAdmin, create);
 
 export default router;
