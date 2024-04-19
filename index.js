@@ -4,12 +4,11 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import { DATABASE } from "./config.js";
-
 require("dotenv").config();
 
 import authRoutes from "./routes/auth";
 import categoryRoutes from "./routes/category";
-
+import postRoutes from "./routes/post";
 const nodemailer = require("nodemailer");
 
 const morgan = require("morgan");
@@ -32,6 +31,7 @@ app.use(morgan("dev"));
 // route middlewares
 app.use("/api", authRoutes);
 app.use("/api", categoryRoutes);
+app.use("/api", postRoutes);
 
 const port = process.env.PORT || 8000;
 

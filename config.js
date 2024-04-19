@@ -9,3 +9,7 @@ export const EMAIL_PASSWORD = "rhpiluuypvmdfyio";
 export const SENDGRID_KEY = "SK9b0c4a4d40678e5fd2c95b04af872529";
 export const MJ_APIKEY_PUBLIC = "dada98ce8191554928bb0e1f17426f68";
 export const MJ_APIKEY_PRIVATE = "47229b8768d5941b2afdcd6cc9da7893";
+
+export const CLOUDINARY_NAME = "ddpzi6tvo";
+export const CLOUDINARY_KEY = "379387689354791";
+export const CLOUDINARY_SECRET = "yAXHZfWMVtkqvnkdQhIsM610dj8";
