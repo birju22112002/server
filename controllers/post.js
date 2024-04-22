@@ -1,7 +1,9 @@
 /** @format */
 
+// middleware
 import Post from "../models/post";
 import Category from "../models/category";
+import Media from "../models/media";
 import slugify from "slugify";
 import cloudinary from "cloudinary";
 
@@ -47,9 +49,8 @@ export const createPost = async (req, res) => {
     setTimeout(async () => {
       try {
         const post = await new Post({
-          title,
+          ...req.body,
           slug: slugify(title),
-          content,
           categories: ids,
           postedBy: req.user._id,
         }).save();
@@ -71,6 +72,42 @@ export const posts = async (req, res) => {
       .populate("categories", "name slug")
       .sort({ createdAt: -1 });
     res.json(all);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const uploadImageFile = async (req, res) => {
+  try {
+    // console.log(req.files);
+    const result = await cloudinary.uploader.upload(req.files.file.path);
+    // save to db
+    const media = await new Media({
+      url: result.secure_url,
+      public_id: result.public_id,
+      postedBy: req.user._id,
+    }).save();
+    res.json(media);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const media = async (req, res) => {
+  try {
+    const media = await Media.find()
+      .populate("postedBy", "_id")
+      .sort({ createdAt: -1 });
+    res.json(media);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const removeMedia = async (req, res) => {
+  try {
+    const media = await Media.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
   } catch (err) {
     console.log(err);
   }
