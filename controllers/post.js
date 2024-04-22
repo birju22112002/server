@@ -68,6 +68,7 @@ export const createPost = async (req, res) => {
 export const posts = async (req, res) => {
   try {
     const all = await Post.find()
+      .populate("featuredImage")
       .populate("postedBy", "name")
       .populate("categories", "name slug")
       .sort({ createdAt: -1 });
