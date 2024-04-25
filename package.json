@@ -20,6 +20,7 @@
     "express-formidable": "^1.2.0",
     "express-jwt": "^6.1.2",
     "googleapis": "^134.0.0",
+    "imgix": "^0.0.2",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.12",
     "morgan": "^1.10.0",

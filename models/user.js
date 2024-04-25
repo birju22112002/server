@@ -1,3 +1,4 @@
+/** @format */
 
 import mongoose from "mongoose";
 const { Schema } = mongoose;
@@ -28,6 +29,9 @@ const userSchema = new Schema(
     image: {
       public_id: "",
       url: "",
+    },
+    website: {
+      type: String,
     },
     resetCode: "",
   },

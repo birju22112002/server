@@ -31,3 +31,21 @@ export const sendResetCodeEmail = async (email, resetCode) => {
     return false;
   }
 };
+
+export const sendNewUserEmail = async (email, subject, htmlContent) => {
+  try {
+    const mailOptions = {
+      from: EMAIL_FROM,
+      to: email,
+      subject: subject,
+      html: htmlContent,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent: " + info.response);
+    return true;
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return false;
+  }
+};

@@ -1,6 +1,8 @@
 /** @format */
 import User from "../models/user";
 import { hashPassword, comparePassword } from "../helpers/auth";
+import { sendNewUserEmail } from "../helpers/email";
+
 import jwt from "jsonwebtoken";
 import nanoid from "nanoid";
 import { sendResetCodeEmail } from "../helpers/email";
@@ -146,5 +148,81 @@ export const currentUser = async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.log(err);
+  }
+};
+
+export const createUser = async (req, res) => {
+  try {
+    const { name, email, password, role, checked, website } = req.body;
+
+    // Validation
+    if (!name) {
+      return res.json({
+        error: "Name is required",
+      });
+    }
+    if (!email) {
+      return res.json({
+        error: "Email is required",
+      });
+    }
+    if (!password || password.length < 6) {
+      return res.json({
+        error: "Password is required and should be 6 characters long",
+      });
+    }
+
+    // Check if user exists
+    const exist = await User.findOne({ email });
+    if (exist) {
+      return res.json({ error: "Email is taken" });
+    }
+
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+
+    // If checked, send email with login details
+    if (checked) {
+      // Prepare email content
+      const emailContent = `
+        <h1>Hi ${name}</h1>
+        <p>Your Wordpress account has been created successfully.</p>
+        <h3>Your login details</h3>
+        <p style="color:red;">Email: ${email}</p>
+        <p style="color:red;">Password: ${password}</p>
+        <small>We recommend you to change your password after login.</small>
+      `;
+
+      try {
+        const emailSent = await sendNewUserEmail(
+          email,
+          "Account created",
+          emailContent
+        );
+        if (emailSent) {
+          console.log("Email sent successfully");
+        } else {
+          console.log("Email sending failed");
+        }
+      } catch (err) {
+        console.log(err);
+        return res.status(500).json({ error: "Email sending failed" });
+      }
+    }
+
+    // Create new user
+    const user = await new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      website,
+    }).save();
+
+    const { password: _, ...rest } = user.toObject();
+    return res.status(201).json(rest);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };

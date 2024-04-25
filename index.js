@@ -1,10 +1,9 @@
 /** @format */
-
+require("dotenv").config();
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import { DATABASE } from "./config.js";
-require("dotenv").config();
 
 import authRoutes from "./routes/auth";
 import categoryRoutes from "./routes/category";
