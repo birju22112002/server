@@ -26,6 +26,7 @@ router.post("/pages/reset-password", resetPassword);
 
 router.get("/current-admin", requireSignin, isAdmin, currentUser);
 router.get("/current-author", requireSignin, isAuthor, currentUser);
+router.get("/current-subscriber", requireSignin, currentUser);
 
 //create-user
 
