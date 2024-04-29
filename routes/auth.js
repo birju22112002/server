@@ -1,7 +1,7 @@
 /** @format */
 
 import express from "express";
-import { requireSignin, isAdmin } from "../middlewares";
+import { requireSignin, isAdmin, isAuthor } from "../middlewares";
 import {
   signup,
   signin,
@@ -23,7 +23,9 @@ router.post("/signup", signup);
 router.post("/signin", signin);
 router.post("/pages/forgot", forgotPassword);
 router.post("/pages/reset-password", resetPassword);
+
 router.get("/current-admin", requireSignin, isAdmin, currentUser);
+router.get("/current-author", requireSignin, isAuthor, currentUser);
 
 //create-user
 
