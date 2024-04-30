@@ -9,6 +9,7 @@ import {
   resetPassword,
   currentUser,
   createUser,
+  users,
 } from "../controllers/auth";
 
 const router = express.Router();
@@ -31,6 +32,8 @@ router.get("/current-subscriber", requireSignin, currentUser);
 //create-user
 
 router.post("/create-user", requireSignin, isAdmin, createUser);
+
+router.get("/users", requireSignin, isAdmin, users);
 
 export default router;
 // module.exports = router;

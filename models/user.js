@@ -2,6 +2,7 @@
 
 import mongoose from "mongoose";
 const { Schema } = mongoose;
+const { ObjectId } = Schema.Types;
 
 const userSchema = new Schema(
   {
@@ -34,6 +35,7 @@ const userSchema = new Schema(
       type: String,
     },
     resetCode: "",
+    posts: [{ type: ObjectId, ref: "Post" }],
   },
   { timestamps: true }
 );

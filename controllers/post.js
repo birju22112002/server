@@ -3,6 +3,7 @@
 // middleware
 import Post from "../models/post";
 import Category from "../models/category";
+import User from "../models/user";
 import Media from "../models/media";
 import slugify from "slugify";
 import cloudinary from "cloudinary";
@@ -54,6 +55,11 @@ export const createPost = async (req, res) => {
           categories: ids,
           postedBy: req.user._id,
         }).save();
+
+        // push the post _id to user's posts []
+        await User.findByIdAndUpdate(req.user._id, {
+          $addToSet: { posts: post._id },
+        });
 
         return res.json(post);
       } catch (err) {

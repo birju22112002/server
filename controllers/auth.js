@@ -226,3 +226,12 @@ export const createUser = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+export const users = async (req, res) => {
+  try {
+    const all = await User.find().select("-password -secret -resetCode");
+    res.json(all);
+  } catch (err) {
+    console.log(err);
+  }
+};
