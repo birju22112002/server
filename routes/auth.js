@@ -2,6 +2,7 @@
 
 import express from "express";
 import { requireSignin, isAdmin, isAuthor } from "../middlewares";
+
 import {
   signup,
   signin,
@@ -10,6 +11,7 @@ import {
   currentUser,
   createUser,
   users,
+  deleteUser,
 } from "../controllers/auth";
 
 const router = express.Router();
@@ -32,8 +34,10 @@ router.get("/current-subscriber", requireSignin, currentUser);
 //create-user
 
 router.post("/create-user", requireSignin, isAdmin, createUser);
-
-router.get("/users", requireSignin, isAdmin, users);
+// requireSignin
+// isAdmin
+router.get("/users/:userId", requireSignin, isAdmin, users);
+router.delete("/users/:userId", requireSignin, isAdmin, deleteUser);
 
 export default router;
 // module.exports = router;

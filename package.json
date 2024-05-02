@@ -22,6 +22,7 @@
     "googleapis": "^134.0.0",
     "imgix": "^0.0.2",
     "jsonwebtoken": "^8.5.1",
+    "jwks-rsa": "^3.1.0",
     "mongoose": "^6.0.12",
     "morgan": "^1.10.0",
     "nanoid": "^2.1.11",

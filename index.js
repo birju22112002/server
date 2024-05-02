@@ -1,5 +1,5 @@
 /** @format */
-require("dotenv").config();
+
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
@@ -8,7 +8,7 @@ import { DATABASE } from "./config.js";
 import authRoutes from "./routes/auth";
 import categoryRoutes from "./routes/category";
 import postRoutes from "./routes/post";
-const nodemailer = require("nodemailer");
+import userRoutes from "./routes/user";
 
 const morgan = require("morgan");
 
@@ -31,7 +31,7 @@ app.use(morgan("dev"));
 app.use("/api", authRoutes);
 app.use("/api", categoryRoutes);
 app.use("/api", postRoutes);
-
+app.use(userRoutes);
 const port = process.env.PORT || 8000;
 
-http.listen(port, () => console.log("Server running on port 8000"));
+http.listen(port, () => console.log(`Server running on port ${port}`));

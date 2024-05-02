@@ -235,3 +235,14 @@ export const users = async (req, res) => {
     console.log(err);
   }
 };
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (userId === req.user._id) return;
+    const user = await User.findByIdAndDelete(userId);
+    res.json(user);
+  } catch (err) {
+    console.log(err);
+  }
+};

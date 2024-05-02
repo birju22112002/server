@@ -13,6 +13,7 @@ export const requireSignin = expressJwt({
 
 export const isAdmin = async (req, res, next) => {
   try {
+    console.log("hello", req.user);
     const user = await User.findById(req.user._id);
     if (user.role !== "Admin") {
       return res.status(403).send("Unauhorized");
@@ -40,6 +41,7 @@ export const isAuthor = async (req, res, next) => {
 export const canCreateRead = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
+    console.log("user", user);
     switch (user.role) {
       case "Admin":
         next();
