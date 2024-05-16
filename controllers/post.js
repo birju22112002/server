@@ -6,6 +6,7 @@ import Category from "../models/category";
 import User from "../models/user";
 import Media from "../models/media";
 import slugify from "slugify";
+
 import cloudinary from "cloudinary";
 
 cloudinary.config({
@@ -18,6 +19,7 @@ export const uploadImage = async (req, res) => {
   try {
     // console.log(req.body);
     const result = await cloudinary.uploader.upload(req.body.image);
+
     // console.log(result);
     res.json(result.secure_url);
   } catch (err) {
@@ -27,47 +29,46 @@ export const uploadImage = async (req, res) => {
 
 export const createPost = async (req, res) => {
   try {
-    console.log(req.body);
     const { title, content, categories } = req.body;
-    // check if title is taken
+    // Check if title is taken
     const alreadyExist = await Post.findOne({
       slug: slugify(title.toLowerCase()),
     });
-    if (alreadyExist) return res.json({ error: "Title is taken" });
+    if (alreadyExist) return res.status(400).json({ error: "Title is taken" });
 
-    // get category ids based on category name
-    let ids = [];
-    for (let i = 0; i < categories.length; i++) {
-      Category.findOne({
-        name: categories[i],
-      }).exec((err, data) => {
-        if (err) return console.log(err);
-        ids.push(data._id);
-      });
-    }
+    // Get category IDs based on category names
+    const categoryIds = await Promise.all(
+      categories.map(async (categoryName) => {
+        try {
+          const category = await Category.findOne({ name: categoryName });
+          return category ? category._id : null;
+        } catch (error) {
+          console.log(error);
+          return null;
+        }
+      })
+    );
 
-    // save post
-    setTimeout(async () => {
-      try {
-        const post = await new Post({
-          ...req.body,
-          slug: slugify(title),
-          categories: ids,
-          postedBy: req.user._id,
-        }).save();
+    // Remove null values from categoryIds
+    const validCategoryIds = categoryIds.filter((categoryId) => categoryId);
 
-        // push the post _id to user's posts []
-        await User.findByIdAndUpdate(req.user._id, {
-          $addToSet: { posts: post._id },
-        });
+    // Save post
+    const post = await new Post({
+      ...req.body,
+      slug: slugify(title),
+      categories: validCategoryIds,
+      postedBy: req.user._id,
+    }).save();
 
-        return res.json(post);
-      } catch (err) {
-        console.log(err);
-      }
-    }, 1000);
+    // Push the post _id to user's posts []
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { posts: post._id },
+    });
+
+    res.json(post);
   } catch (err) {
     console.log(err);
+    res.status(500).json({ error: "An error occurred. Please try again." });
   }
 };
 
@@ -84,6 +85,20 @@ export const posts = async (req, res) => {
     res.json(all);
   } catch (err) {
     console.log(err);
+  }
+};
+export const postsForAdmin = async (req, res) => {
+  try {
+    const posts = await Post.find({})
+      .populate("postedBy", "_id name")
+      .populate("categories", "_id name slug")
+      .populate("featuredImage", "url")
+      .sort({ createdAt: -1 })
+      .exec();
+    return res.json(posts);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(400);
   }
 };
 
@@ -122,6 +137,20 @@ export const removeMedia = async (req, res) => {
     console.log(err);
   }
 };
+
+export const singlePost = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const post = await Post.findOne({ slug })
+      .populate("postedBy", "name")
+      .populate("categories", "name slug")
+      .populate("featuredImage", "url");
+    res.json(post);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 export const removePost = async (req, res) => {
   try {
     const post = await Post.findByIdAndDelete(req.params.postId);
@@ -130,41 +159,59 @@ export const removePost = async (req, res) => {
     console.log(err);
   }
 };
+
 export const editPost = async (req, res) => {
   try {
     const { postId } = req.params;
     const { title, content, featuredImage, categories } = req.body;
-    // get category ids based on category name
-    let ids = [];
-    for (let i = 0; i < categories.length; i++) {
-      Category.findOne({
-        name: categories[i],
-      }).exec((err, data) => {
-        if (err) return console.log(err);
-        ids.push(data._id);
-      });
+
+    // Check if the logged-in user is the author of the post
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+    if (post.postedBy.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ error: "You are not authorized to edit this post" });
     }
 
-    setTimeout(async () => {
-      const post = await Post.findByIdAndUpdate(
-        postId,
-        {
-          title,
-          slug: slugify(title),
-          content,
-          categories: ids,
-          featuredImage,
-        },
-        { new: true }
-      )
-        .populate("postedBy", "name")
-        .populate("categories", "name slug")
-        .populate("featuredImage", "url");
+    // Get category IDs based on category names
+    const categoryIds = await Promise.all(
+      categories.map(async (categoryName) => {
+        try {
+          const category = await Category.findOne({ name: categoryName });
+          return category ? category._id : null;
+        } catch (error) {
+          console.log(error);
+          return null;
+        }
+      })
+    );
 
-      res.json(post);
-    }, 1000);
+    // Remove null values from categoryIds
+    const validCategoryIds = categoryIds.filter((categoryId) => categoryId);
+
+    // Update the post
+    const updatedPost = await Post.findByIdAndUpdate(
+      postId,
+      {
+        title,
+        slug: slugify(title),
+        content,
+        categories: validCategoryIds,
+        featuredImage,
+      },
+      { new: true }
+    )
+      .populate("postedBy", "name")
+      .populate("categories", "name slug")
+      .populate("featuredImage", "url");
+
+    res.json(updatedPost);
   } catch (err) {
     console.log(err);
+    res.status(500).json({ error: "An error occurred. Please try again." });
   }
 };
 
