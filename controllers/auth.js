@@ -6,6 +6,7 @@ import { sendNewUserEmail } from "../helpers/email";
 import jwt from "jsonwebtoken";
 import nanoid from "nanoid";
 import { sendResetCodeEmail } from "../helpers/email";
+
 export const signup = async (req, res) => {
   console.log("HIT SIGNUP");
   try {
@@ -186,10 +187,10 @@ export const createUser = async (req, res) => {
       // Prepare email content
       const emailContent = `
         <h1>Hi ${name}</h1>
-        <p>Your Wordpress account has been created successfully.</p>
+        <p>Your account has been created successfully.</p>
         <h3>Your login details</h3>
-        <p style="color:red;">Email: ${email}</p>
-        <p style="color:red;">Password: ${password}</p>
+        <p>Email: ${email}</p>
+        <p>Password: ${password}</p>
         <small>We recommend you to change your password after login.</small>
       `;
 
@@ -198,7 +199,7 @@ export const createUser = async (req, res) => {
           email,
           "Account created",
           emailContent
-        );
+        ); // Use updated email sending function
         if (emailSent) {
           console.log("Email sent successfully");
         } else {

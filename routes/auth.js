@@ -37,7 +37,7 @@ router.post("/create-user", requireSignin, isAdmin, createUser);
 
 // requireSignin
 // isAdmin
-router.get("/users", requireSignin, isAdmin, users);
+router.get("/users", users);
 router.delete("/users/:userId", requireSignin, isAdmin, deleteUser);
 
 export default router;
