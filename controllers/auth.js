@@ -2,6 +2,7 @@
 import User from "../models/user";
 import { hashPassword, comparePassword } from "../helpers/auth";
 import { sendNewUserEmail } from "../helpers/email";
+import emailValidator from "email-validator";
 
 import jwt from "jsonwebtoken";
 import nanoid from "nanoid";
@@ -245,5 +246,161 @@ export const deleteUser = async (req, res) => {
     res.json(user);
   } catch (err) {
     console.log(err);
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const { id, name, email, password, website, image } = req.body;
+
+    const userFromDb = await User.findById(id);
+    if (!userFromDb) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (userFromDb._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // check valid email
+    if (!emailValidator.validate(email)) {
+      return res.status(400).json({ error: "Invalid email" });
+    }
+
+    // check if email is taken
+    const exist = await User.findOne({ email });
+    if (exist && exist._id.toString() !== userFromDb._id.toString()) {
+      return res.status(400).json({ error: "Email is taken" });
+    }
+
+    // check password length
+    if (password && password.length < 6) {
+      return res.status(400).json({
+        error: "Password is required and should be 6 characters long",
+      });
+    }
+
+    const hashedPassword = password ? await hashPassword(password) : undefined;
+    const updated = await User.findByIdAndUpdate(
+      id,
+      {
+        name: name || userFromDb.name,
+        email: email || userFromDb.email,
+        password: hashedPassword || userFromDb.password,
+        website: website || userFromDb.website,
+        image: image || userFromDb.image,
+      },
+      { new: true }
+    ).populate("image");
+    res.json(updated);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const updateUserByAdmin = async (req, res) => {
+  try {
+    const { id, name, email, password, website, role, image } = req.body;
+
+    const userFromDb = await User.findById(id);
+    if (!userFromDb) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // check valid email
+    if (!emailValidator.validate(email)) {
+      return res.status(400).json({ error: "Invalid email" });
+    }
+
+    // check if email is taken
+    const exist = await User.findOne({ email });
+    if (exist && exist._id.toString() !== userFromDb._id.toString()) {
+      return res.status(400).json({ error: "Email is taken" });
+    }
+
+    // check password length
+    if (password && password.length < 6) {
+      return res.status(400).json({
+        error: "Password is required and should be 6 characters long",
+      });
+    }
+
+    const hashedPassword = password ? await hashPassword(password) : undefined;
+    const updated = await User.findByIdAndUpdate(
+      id,
+      {
+        name: name || userFromDb.name,
+        email: email || userFromDb.email,
+        password: hashedPassword || userFromDb.password,
+        website: website || userFromDb.website,
+        role: role || userFromDb.role,
+        image: image || userFromDb.image,
+      },
+      { new: true }
+    ).populate("image");
+    res.json(updated);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+export const updateUserProfile = async (req, res) => {
+  try {
+    const { id, name, email, password, website, image } = req.body;
+
+    // Retrieve the user from the database
+    const userFromDb = await User.findById(id);
+    if (!userFromDb) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Ensure that the user updating the profile is authorized
+    if (userFromDb._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Validate email format
+    if (!emailValidator.validate(email)) {
+      return res.status(400).json({ error: "Invalid email" });
+    }
+
+    // Check if the email is already taken by another user
+    const exist = await User.findOne({ email });
+    if (exist && exist._id.toString() !== userFromDb._id.toString()) {
+      return res.status(400).json({ error: "Email is taken" });
+    }
+
+    // Check if a new password is provided and hash it
+    const hashedPassword = password ? await hashPassword(password) : undefined;
+
+    // Update the user's profile information
+    const updated = await User.findByIdAndUpdate(
+      id,
+      {
+        name: name || userFromDb.name,
+        email: email || userFromDb.email,
+        password: hashedPassword || userFromDb.password,
+        website: website || userFromDb.website,
+        image: image || userFromDb.image,
+      },
+      { new: true } // Return the updated document
+    ).populate("image");
+
+    // Return the updated user object
+    res.json(updated);
+  } catch (err) {
+    console.error("Error in updateUserProfile:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const currentUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate("image");
+    res.json(user);
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(400);
   }
 };

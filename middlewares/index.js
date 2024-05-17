@@ -13,7 +13,6 @@ export const requireSignin = expressJwt({
 
 export const isAdmin = async (req, res, next) => {
   try {
-    console.log("hello", req.user);
     const user = await User.findById(req.user._id);
     if (user.role !== "Admin") {
       return res.status(403).send("Unauhorized");
@@ -95,6 +94,36 @@ export const canDeleteMedia = async (req, res, next) => {
           next();
         }
         break;
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const canUpdateDeleteComment = async (req, res, next) => {
+  try {
+    const { commentId } = req.params;
+    const comment = await Comment.findById(commentId);
+
+    // you get req.user._id from verified jwt token
+    const user = await User.findById(req.user._id);
+    console.log("canUpdateDeleteUser comment ===> ", comment, user);
+    switch (user.role) {
+      case "Admin":
+        next();
+        break;
+      case "Author":
+        if (comment.postedBy.toString() === req.user._id.toString()) {
+          next();
+        }
+        break;
+      case "Subscriber":
+        if (comment.postedBy.toString() === req.user._id.toString()) {
+          next();
+        }
+        break;
+      default:
+        return res.status(400).send("Unauthorized");
     }
   } catch (err) {
     console.log(err);

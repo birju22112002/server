@@ -87,6 +87,32 @@ export const posts = async (req, res) => {
     console.log(err);
   }
 };
+
+// export const posts = async (req, res) => {
+//   try {
+//     const perPage = 6;
+//     const page = req.params.page || 1;
+
+//     const all = await Post.find()
+//       .skip((page - 1) * perPage)
+//       .populate("featuredImage")
+//       .populate("postedBy", "name")
+//       .populate("categories", "name slug")
+//       .sort({ createdAt: -1 })
+//       .limit(perPage);
+
+//     // Check if there are more posts available
+//     const totalPosts = await Post.countDocuments();
+//     const totalPages = Math.ceil(totalPosts / perPage);
+//     const hasNextPage = page < totalPages;
+
+//     res.json({ posts: all, hasNextPage });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({ error: "An error occurred while fetching posts." });
+//   }
+// };
+
 export const postsForAdmin = async (req, res) => {
   try {
     const posts = await Post.find({})
@@ -223,6 +249,15 @@ export const postsByAuthor = async (req, res) => {
       .populate("featuredImage", "url")
       .sort({ createdAt: -1 });
     res.json(posts);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const postCount = async (req, res) => {
+  try {
+    const count = await Post.countDocuments();
+    res.json(count);
   } catch (err) {
     console.log(err);
   }
