@@ -6,6 +6,7 @@ import Category from "../models/category";
 import User from "../models/user";
 import Media from "../models/media";
 import slugify from "slugify";
+import Comment from "../models/comment";
 
 import cloudinary from "cloudinary";
 
@@ -72,59 +73,44 @@ export const createPost = async (req, res) => {
   }
 };
 
-export const posts = async (req, res) => {
-  try {
-    const all = await Post.find()
-      .populate({
-        path: "featuredImage",
-        model: "Media",
-      })
-      .populate("postedBy", "name")
-      .populate("categories", "name slug")
-      .sort({ createdAt: -1 });
-    res.json(all);
-  } catch (err) {
-    console.log(err);
-  }
-};
-
 // export const posts = async (req, res) => {
 //   try {
-//     const perPage = 6;
-//     const page = req.params.page || 1;
-
 //     const all = await Post.find()
-//       .skip((page - 1) * perPage)
-//       .populate("featuredImage")
+//       .populate({
+//         path: "featuredImage",
+//         model: "Media",
+//       })
 //       .populate("postedBy", "name")
 //       .populate("categories", "name slug")
-//       .sort({ createdAt: -1 })
-//       .limit(perPage);
-
-//     // Check if there are more posts available
-//     const totalPosts = await Post.countDocuments();
-//     const totalPages = Math.ceil(totalPosts / perPage);
-//     const hasNextPage = page < totalPages;
-
-//     res.json({ posts: all, hasNextPage });
+//       .sort({ createdAt: -1 });
+//     res.json(all);
 //   } catch (err) {
 //     console.log(err);
-//     res.status(500).json({ error: "An error occurred while fetching posts." });
 //   }
 // };
 
-export const postsForAdmin = async (req, res) => {
+export const posts = async (req, res) => {
   try {
-    const posts = await Post.find({})
-      .populate("postedBy", "_id name")
-      .populate("categories", "_id name slug")
-      .populate("featuredImage", "url")
+    const perPage = 6;
+    const page = parseInt(req.params.page) || 1;
+
+    const all = await Post.find()
+      .skip((page - 1) * perPage)
+      .populate("featuredImage")
+      .populate("postedBy", "name")
+      .populate("categories", "name slug")
       .sort({ createdAt: -1 })
-      .exec();
-    return res.json(posts);
+      .limit(perPage);
+
+    // Check if there are more posts available
+    const totalPosts = await Post.countDocuments();
+    const totalPages = Math.ceil(totalPosts / perPage);
+    const hasNextPage = page < totalPages;
+
+    res.json({ posts: all, hasNextPage });
   } catch (err) {
     console.log(err);
-    res.sendStatus(400);
+    res.status(500).json({ error: "An error occurred while fetching posts." });
   }
 };
 
@@ -171,9 +157,21 @@ export const singlePost = async (req, res) => {
       .populate("postedBy", "name")
       .populate("categories", "name slug")
       .populate("featuredImage", "url");
-    res.json(post);
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    const comments = await Comment.find({ postId: post._id })
+      .populate("postedBy", "name")
+      .sort({ createdAt: -1 });
+
+    post.categories = post.categories || [];
+
+    res.json({ post, comments });
   } catch (err) {
     console.log(err);
+    res.status(500).json({ error: "An error occurred. Please try again." });
   }
 };
 
@@ -258,6 +256,33 @@ export const postCount = async (req, res) => {
   try {
     const count = await Post.countDocuments();
     res.json(count);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const postsForAdmin = async (req, res) => {
+  try {
+    const posts = await Post.find()
+      .select("title slug")
+      .sort({ createdAt: -1 });
+    res.json(posts);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const createComment = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const { comment } = req.body;
+    let newComment = await new Comment({
+      content: comment,
+      postedBy: req.user._id,
+      postId,
+    }).save();
+    newComment = await newComment.populate("postedBy", "name");
+    res.json(newComment);
   } catch (err) {
     console.log(err);
   }

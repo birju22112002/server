@@ -2,6 +2,7 @@
 import User from "../models/user";
 import Post from "../models/post";
 import Media from "../models/media";
+// import jwt from "jsonwebtoken";
 
 import expressJwt from "express-jwt";
 require("dotenv").config();
@@ -9,6 +10,7 @@ require("dotenv").config();
 export const requireSignin = expressJwt({
   secret: process.env.JWT_SECRET,
   algorithms: ["HS256"],
+  // userProperty: "auth",
 });
 
 export const isAdmin = async (req, res, next) => {
