@@ -35,6 +35,7 @@ import {
   commentCount,
   updateComment,
   removeComment,
+  getNumbers,
 } from "../controllers/post";
 
 router.post("/upload-image", requireSignin, canCreateRead, uploadImage);
@@ -77,5 +78,6 @@ router.delete(
   canUpdateDeleteComment,
   removeComment
 );
+router.get("/numbers", getNumbers);
 
 export default router;

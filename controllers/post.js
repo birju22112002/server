@@ -364,3 +364,16 @@ export const removeComment = async (req, res) => {
     res.status(500).json({ error: "An error occurred. Please try again." });
   }
 };
+
+export const getNumbers = async (req, res) => {
+  try {
+    const posts = await Post.countDocuments();
+    const users = await User.countDocuments();
+    const comments = await Comment.countDocuments();
+    const categories = await Category.countDocuments();
+
+    return res.json({ posts, users, comments, categories });
+  } catch (err) {
+    console.log(err);
+  }
+};

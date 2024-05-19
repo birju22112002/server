@@ -2,6 +2,7 @@
 
 import Category from "../models/category";
 import slugify from "slugify";
+import Post from "../models/post";
 
 export const create = async (req, res) => {
   try {
@@ -50,6 +51,27 @@ export const updateCategory = async (req, res) => {
     res.json(category);
   } catch (error) {
     console.log(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const postsByCategory = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const category = await Category.findOne({ slug });
+
+    if (!category) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    const posts = await Post.find({ categories: category._id })
+      .populate("featuredImage")
+      .populate("postedBy", "name") // Ensure to populate the postedBy field if needed
+      .limit(20);
+
+    res.json({ posts, category });
+  } catch (err) {
+    console.log(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
