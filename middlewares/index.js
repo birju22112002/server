@@ -2,6 +2,8 @@
 import User from "../models/user";
 import Post from "../models/post";
 import Media from "../models/media";
+import Comment from "../models/comment";
+
 // import jwt from "jsonwebtoken";
 
 import expressJwt from "express-jwt";
@@ -101,33 +103,44 @@ export const canDeleteMedia = async (req, res, next) => {
     console.log(err);
   }
 };
-
 export const canUpdateDeleteComment = async (req, res, next) => {
   try {
     const { commentId } = req.params;
     const comment = await Comment.findById(commentId);
 
-    // you get req.user._id from verified jwt token
+    if (!comment) {
+      console.log("Comment not found");
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
     const user = await User.findById(req.user._id);
-    console.log("canUpdateDeleteUser comment ===> ", comment, user);
+
+    if (!user) {
+      console.log("User not found");
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // console.log(
+    //   `User role: ${user.role}, User ID: ${user._id}, Comment posted by: ${comment.postedBy}`
+    // );
+
     switch (user.role) {
       case "Admin":
         next();
         break;
       case "Author":
-        if (comment.postedBy.toString() === req.user._id.toString()) {
-          next();
-        }
-        break;
       case "Subscriber":
         if (comment.postedBy.toString() === req.user._id.toString()) {
           next();
+        } else {
+          return res.status(403).json({ error: "Unauthorized" });
         }
         break;
       default:
-        return res.status(400).send("Unauthorized");
+        return res.status(403).json({ error: "Unauthorized" });
     }
   } catch (err) {
     console.log(err);
+    res.status(500).json({ error: "An error occurred. Please try again." });
   }
 };

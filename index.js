@@ -8,8 +8,7 @@ import { DATABASE } from "./config.js";
 import authRoutes from "./routes/auth";
 import categoryRoutes from "./routes/category";
 import postRoutes from "./routes/post";
-
-// const websiteRoutes = require("./routes/website");
+import websiteRoutes from "./routes/website";
 
 const morgan = require("morgan");
 
@@ -32,7 +31,7 @@ app.use(morgan("dev"));
 app.use("/api", authRoutes);
 app.use("/api", categoryRoutes);
 app.use("/api", postRoutes);
-// app.use("/api", websiteRoutes);
+app.use("/api", websiteRoutes);
 
 const port = process.env.PORT || 8000;
 
