@@ -299,9 +299,24 @@ export const updateUser = async (req, res) => {
   }
 };
 
+export const currentUserProfile = async (req, res) => {
+  try {
+    console.log("req.params.userId", req.params.userId);
+    const user = await User.findById(req.params.userId).populate("image");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(user);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 export const updateUserByAdmin = async (req, res) => {
   try {
-    const { id, name, email, password, website, role, image } = req.body;
+    const { id, name, email, password, website, role, image, checked } =
+      req.body;
 
     const userFromDb = await User.findById(id);
     if (!userFromDb) {
@@ -339,12 +354,41 @@ export const updateUserByAdmin = async (req, res) => {
       },
       { new: true }
     ).populate("image");
+    if (checked) {
+      //send email
+      const emailContent = `
+        <h1>Hi ${name}</h1>
+        <p>Your account has been updated successfully.</p>
+        <h3>Your login details</h3>
+        <p>Email: ${email}</p>
+        <p>Password: ${password}</p>
+        <small>We recommend you to change your password after login.</small>
+      `;
+
+      try {
+        const emailSent = await sendNewUserEmail(
+          email,
+          "Account updated",
+          emailContent
+        );
+        if (emailSent) {
+          console.log("Email sent successfully");
+        } else {
+          console.log("Email sending failed");
+        }
+      } catch (err) {
+        console.log(err);
+        return res.status(500).json({ error: "Email sending failed" });
+      }
+    }
+
     res.json(updated);
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 export const updateUserProfile = async (req, res) => {
   try {
     const { id, name, email, password, website, image } = req.body;
@@ -395,12 +439,15 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
-export const currentUserProfile = async (req, res) => {
+export const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate("image");
+    const user = await User.findById(req.params.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
     res.json(user);
   } catch (err) {
     console.log(err);
-    res.sendStatus(400);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
